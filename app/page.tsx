@@ -158,7 +158,7 @@ export default function Component() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-xl font-bold uppercase tracking-tight">LA CALCULATRICE</h1>
+        <h1 className="text-xl font-bold uppercase tracking-tight">La Calculatrice</h1>
         <button
           onClick={addInvestmentCalculator}
           className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
