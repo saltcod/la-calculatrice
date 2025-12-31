@@ -9,7 +9,7 @@ A minimal financial calculator web app for comparing loan scenarios and retireme
 - Loan Calculator
 - RRSP/Investment Calculator
 
-## Getting Started
+## Make it your own
 
 1. Fork and clone this repo
 2. Deploy it to Vercel
