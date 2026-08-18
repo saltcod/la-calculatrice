@@ -172,18 +172,14 @@ export default function Component() {
   }
 
   function addInvestmentCalculator() {
-    const birthYear = 1981
-    const currentYear = new Date().getFullYear()
-    const currentAge = currentYear - birthYear
-
     const newCalc: InvestmentCalculator = {
       id: Date.now(),
       type: 'investment',
-      currentAge,
+      currentAge: 45,
       retirementAge: 56,
-      currentBalance: 300000,
+      currentBalance: 380000,
       monthlyContribution: 2000,
-      annualReturn: 6,
+      annualReturn: 7,
       totalContributions: 0,
       totalValue: 0,
       growth: 0,
