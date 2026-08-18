@@ -5,6 +5,7 @@ import { useState } from 'react'
 interface LoanCalculator {
   id: number
   type: 'loan'
+  name?: string
   loanAmount: number
   interestRate: number
   loanTerm: number
@@ -15,6 +16,7 @@ interface LoanCalculator {
 interface InvestmentCalculator {
   id: number
   type: 'investment'
+  name?: string
   currentAge: number
   retirementAge: number
   currentBalance: number
@@ -28,6 +30,7 @@ interface InvestmentCalculator {
 interface TFSACalculator {
   id: number
   type: 'tfsa'
+  name?: string
   amount: number
   returnRate: number
   timeHorizon: number
@@ -153,6 +156,10 @@ export default function Component() {
     )
   }
 
+  function updateCalculatorName(id: number, name: string) {
+    setCalculators((prev) => prev.map((calc) => (calc.id === id ? { ...calc, name } : calc)))
+  }
+
   function addLoanCalculator(calculatorToDuplicate: LoanCalculator) {
     setCalculators((prev) => {
       const newCalc: LoanCalculator = {
@@ -229,7 +236,7 @@ export default function Component() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {calculators.map((calculator) => (
           <div key={calculator.id} className="border border-black p-4">
-            <div className="flex gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4">
               <button
                 onClick={() => {
                   if (calculator.type === 'loan') {
@@ -250,6 +257,13 @@ export default function Component() {
               >
                 [-]
               </button>
+              <input
+                type="text"
+                value={calculator.name ?? ''}
+                onChange={(e) => updateCalculatorName(calculator.id, e.target.value)}
+                placeholder="optional name here"
+                className="flex-1 min-w-0 bg-transparent font-bold text-red-500 placeholder:text-red-500 focus:outline-none"
+              />
             </div>
             {calculator.type === 'loan' ? (
               <div className="space-y-4">
