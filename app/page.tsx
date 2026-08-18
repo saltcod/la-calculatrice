@@ -223,7 +223,7 @@ export default function Component() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-xl font-bold uppercase tracking-tight">La Calculatrice</h1>
         <div className="flex items-center gap-4">
-          {savingsCalculators.length >= 2 && (
+          {savingsCalculators.length >= 1 && (
             <div className="text-sm font-bold">
               TOTAL RRSP + TFSA: ${savingsTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
