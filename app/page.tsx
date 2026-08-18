@@ -262,7 +262,7 @@ export default function Component() {
                 value={calculator.name ?? ''}
                 onChange={(e) => updateCalculatorName(calculator.id, e.target.value)}
                 placeholder="optional name here"
-                className="flex-1 min-w-0 bg-transparent font-bold text-red-500 placeholder:text-red-500 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent text-xs text-gray-400 placeholder:text-gray-400 border-b border-gray-300 focus:outline-none focus:border-gray-400"
               />
             </div>
             {calculator.type === 'loan' ? (
