@@ -25,7 +25,17 @@ interface InvestmentCalculator {
   growth: number
 }
 
-type Calculator = LoanCalculator | InvestmentCalculator
+interface TFSACalculator {
+  id: number
+  type: 'tfsa'
+  amount: number
+  returnRate: number
+  timeHorizon: number
+  futureValue: number
+  growth: number
+}
+
+type Calculator = LoanCalculator | InvestmentCalculator | TFSACalculator
 
 function calculateLoan(calculator: LoanCalculator) {
   const { loanAmount, interestRate, loanTerm } = calculator
@@ -77,6 +87,17 @@ function calculateInvestment(calculator: InvestmentCalculator) {
   }
 }
 
+function calculateTFSA(calculator: TFSACalculator) {
+  const { amount, returnRate, timeHorizon } = calculator
+  const futureValue = amount * Math.pow(1 + returnRate / 100, timeHorizon)
+  const growth = futureValue - amount
+
+  return {
+    futureValue,
+    growth,
+  }
+}
+
 export default function Component() {
   const initialLoan: LoanCalculator = {
     id: 1,
@@ -119,6 +140,19 @@ export default function Component() {
     )
   }
 
+  function updateTFSACalculator(id: number, field: keyof TFSACalculator, value: number) {
+    setCalculators((prev) =>
+      prev.map((calc) => {
+        if (calc.id === id && calc.type === 'tfsa') {
+          const updatedCalc = { ...calc, [field]: value } as TFSACalculator
+          const { futureValue, growth } = calculateTFSA(updatedCalc)
+          return { ...updatedCalc, futureValue, growth }
+        }
+        return calc
+      })
+    )
+  }
+
   function addLoanCalculator(calculatorToDuplicate: LoanCalculator) {
     setCalculators((prev) => {
       const newCalc: LoanCalculator = {
@@ -151,6 +185,24 @@ export default function Component() {
     setCalculators((prev) => [...prev, { ...newCalc, totalContributions, totalValue, growth }])
   }
 
+  function addTFSACalculator(calculatorToDuplicate?: TFSACalculator) {
+    setCalculators((prev) => {
+      const newCalc: TFSACalculator = calculatorToDuplicate
+        ? { ...calculatorToDuplicate, id: Date.now() }
+        : {
+            id: Date.now(),
+            type: 'tfsa',
+            amount: 50000,
+            returnRate: 7,
+            timeHorizon: 20,
+            futureValue: 0,
+            growth: 0,
+          }
+      const { futureValue, growth } = calculateTFSA(newCalc)
+      return [...prev, { ...newCalc, futureValue, growth }]
+    })
+  }
+
   function removeCalculator(id: number) {
     setCalculators((prev) => prev.filter((calc) => calc.id !== id))
   }
@@ -159,12 +211,20 @@ export default function Component() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-xl font-bold uppercase tracking-tight">La Calculatrice</h1>
-        <button
-          onClick={addInvestmentCalculator}
-          className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
-        >
-          + RRSP
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={addInvestmentCalculator}
+            className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
+          >
+            + RRSP
+          </button>
+          <button
+            onClick={() => addTFSACalculator()}
+            className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
+          >
+            + TFSA
+          </button>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {calculators.map((calculator) => (
@@ -174,6 +234,8 @@ export default function Component() {
                 onClick={() => {
                   if (calculator.type === 'loan') {
                     addLoanCalculator(calculator)
+                  } else if (calculator.type === 'tfsa') {
+                    addTFSACalculator(calculator)
                   } else {
                     addInvestmentCalculator()
                   }
@@ -249,7 +311,7 @@ export default function Component() {
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : calculator.type === 'investment' ? (
               <div className="space-y-4">
                 <div>
                   <label className="block mb-2 uppercase text-xs font-bold">CURRENT AGE</label>
@@ -338,6 +400,66 @@ export default function Component() {
                   <div className="text-sm">
                     CONTRIBUTIONS: $
                     {calculator.totalContributions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-sm">
+                    GROWTH: ${calculator.growth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block mb-2 uppercase text-xs font-bold">AMOUNT</label>
+                  <input
+                    type="text"
+                    value={calculator.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/,/g, '')
+                      if (!isNaN(Number(value))) {
+                        updateTFSACalculator(calculator.id, 'amount', Number(value))
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault()
+                        updateTFSACalculator(calculator.id, 'amount', calculator.amount + 10000)
+                      } else if (e.key === 'ArrowDown') {
+                        e.preventDefault()
+                        updateTFSACalculator(calculator.id, 'amount', Math.max(calculator.amount - 10000, 0))
+                      }
+                    }}
+                    className="w-full border border-black p-2 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 uppercase text-xs font-bold">RETURN RATE %</label>
+                  <input
+                    type="number"
+                    value={calculator.returnRate}
+                    onChange={(e) => updateTFSACalculator(calculator.id, 'returnRate', Number(e.target.value))}
+                    min="0"
+                    max="20"
+                    step="0.1"
+                    className="w-full border border-black p-2 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 uppercase text-xs font-bold">TIME HORIZON (YEARS)</label>
+                  <input
+                    type="number"
+                    value={calculator.timeHorizon}
+                    onChange={(e) => updateTFSACalculator(calculator.id, 'timeHorizon', Number(e.target.value))}
+                    min="1"
+                    max="50"
+                    className="w-full border border-black p-2 bg-white"
+                  />
+                </div>
+                <div className="border-t border-black pt-3 space-y-1">
+                  <div className="text-lg font-bold">
+                    ${calculator.futureValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-sm">
+                    AMOUNT: ${calculator.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                   </div>
                   <div className="text-sm">
                     GROWTH: ${calculator.growth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
