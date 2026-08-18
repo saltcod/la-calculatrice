@@ -272,7 +272,7 @@ export default function Component() {
                 type="text"
                 value={calculator.name ?? ''}
                 onChange={(e) => updateCalculatorName(calculator.id, e.target.value)}
-                placeholder="optional name here"
+                placeholder="Name"
                 className="flex-1 min-w-0 bg-transparent text-xs text-gray-400 placeholder:text-gray-400 border-b border-gray-300 focus:outline-none focus:border-gray-400"
               />
             </div>
