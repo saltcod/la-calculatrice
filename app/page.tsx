@@ -210,23 +210,38 @@ export default function Component() {
     setCalculators((prev) => prev.filter((calc) => calc.id !== id))
   }
 
+  const savingsCalculators = calculators.filter(
+    (calc): calc is InvestmentCalculator | TFSACalculator => calc.type === 'investment' || calc.type === 'tfsa'
+  )
+  const savingsTotal = savingsCalculators.reduce(
+    (sum, calc) => sum + (calc.type === 'investment' ? calc.totalValue : calc.futureValue),
+    0
+  )
+
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-xl font-bold uppercase tracking-tight">La Calculatrice</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={addInvestmentCalculator}
-            className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
-          >
-            + RRSP
-          </button>
-          <button
-            onClick={() => addTFSACalculator()}
-            className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
-          >
-            + TFSA
-          </button>
+        <div className="flex items-center gap-4">
+          {savingsCalculators.length >= 2 && (
+            <div className="text-sm font-bold">
+              TOTAL RRSP + TFSA: ${savingsTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={addInvestmentCalculator}
+              className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
+            >
+              + RRSP
+            </button>
+            <button
+              onClick={() => addTFSACalculator()}
+              className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
+            >
+              + TFSA
+            </button>
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
