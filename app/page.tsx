@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface LoanCalculator {
   id: number
@@ -39,6 +39,14 @@ interface TFSACalculator {
 }
 
 type Calculator = LoanCalculator | InvestmentCalculator | TFSACalculator
+
+interface SavedConfig {
+  id: number
+  name: string
+  calculators: Calculator[]
+}
+
+const STORAGE_KEY = 'la-calculatrice-saved-configs'
 
 function calculateLoan(calculator: LoanCalculator) {
   const { loanAmount, interestRate, loanTerm } = calculator
@@ -116,6 +124,56 @@ export default function Component() {
   initialLoan.totalPayment = totalPayment
 
   const [calculators, setCalculators] = useState<Calculator[]>([initialLoan])
+  const [savedConfigs, setSavedConfigs] = useState<SavedConfig[]>([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [configName, setConfigName] = useState('')
+  const historyRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      try {
+        setSavedConfigs(JSON.parse(stored))
+      } catch {
+        // ignore corrupted storage
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!showHistory) return
+    function handleClickOutside(e: MouseEvent) {
+      if (historyRef.current && !historyRef.current.contains(e.target as Node)) {
+        setShowHistory(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showHistory])
+
+  function saveConfig() {
+    if (!configName.trim()) return
+    const newConfig: SavedConfig = {
+      id: Date.now(),
+      name: configName.trim(),
+      calculators,
+    }
+    const updated = [...savedConfigs, newConfig]
+    setSavedConfigs(updated)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+    setConfigName('')
+  }
+
+  function loadConfig(config: SavedConfig) {
+    setCalculators(config.calculators)
+    setShowHistory(false)
+  }
+
+  function deleteConfig(id: number) {
+    const updated = savedConfigs.filter((c) => c.id !== id)
+    setSavedConfigs(updated)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  }
 
   function updateLoanCalculator(id: number, field: keyof LoanCalculator, value: number) {
     setCalculators((prev) =>
@@ -241,6 +299,63 @@ export default function Component() {
             >
               + TFSA
             </button>
+          </div>
+          <div className="relative" ref={historyRef}>
+            <button
+              onClick={() => setShowHistory((prev) => !prev)}
+              className="border border-black px-4 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold"
+            >
+              History
+            </button>
+            {showHistory && (
+              <div className="absolute right-0 mt-2 w-72 border border-black bg-white p-4 z-10">
+                <label className="block mb-2 uppercase text-xs font-bold">Save Current Config</label>
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={configName}
+                    onChange={(e) => setConfigName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveConfig()
+                    }}
+                    placeholder="Config name"
+                    className="flex-1 min-w-0 border border-black p-2 bg-white text-sm"
+                  />
+                  <button
+                    onClick={saveConfig}
+                    disabled={!configName.trim()}
+                    className="border border-black px-3 py-2 bg-white hover:bg-black hover:text-white transition-colors uppercase text-xs font-bold disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black"
+                  >
+                    Save
+                  </button>
+                </div>
+                <div className="border-t border-black pt-3">
+                  <label className="block mb-2 uppercase text-xs font-bold">Saved Configs</label>
+                  {savedConfigs.length === 0 ? (
+                    <div className="text-xs text-gray-400">No saved configs yet.</div>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {savedConfigs.map((config) => (
+                        <div key={config.id} className="flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => loadConfig(config)}
+                            className="flex-1 text-left text-sm hover:underline truncate"
+                          >
+                            {config.name}
+                          </button>
+                          <button
+                            onClick={() => deleteConfig(config.id)}
+                            className="border border-black px-2 py-1 bg-white hover:bg-black hover:text-white transition-colors text-xs"
+                          >
+                            [x]
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
